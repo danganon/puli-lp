@@ -1,0 +1,19 @@
+{
+  "results": {
+    "homeUrl": "https://clawdet.com/",
+    "homeTitle": "Clawdet - Your AI Companion",
+    "fleetUrl": "https://clawdet.com/nanofleets",
+    "fleetTitle": "Clawdet - Your AI Companion",
+    "xUrl": "https://clawdet.com/login?error=Configuration",
+    "xTitle": "Clawdet - Your AI Companion",
+    "invalidVisibleMessage": "🐾Get Your FreeAI AgentYour own NanoClaw AI in seconds. Free.~2sdeployFreebetaAPI+ MCP🚀 Create My Agent — FreeContinue with XHave an account? Log in🐳Docker ContainerIsolated agent, own workspace🧠Claude Sonnet 4.5Latest AI model built-in🔌REST API + MCPIntegrate anywhere📡Telegram / Slack / WebConnect any channelNanoFleets for Teams·NanoClaw💬(self.__next_f=self.__next_f||[]).push([0])self.__next_f.push([1,\"1:\\\"$Sreact.fragment\\\"\\n2:I[9766,[],\\\"\\\"]\\n3:I[8924,[],\\\"\\\"]\\n4:I[6011,[\\\"7177\\\",\\\"static/chunks/app/layout-8d6931c9d428a5d3.js\\\"],\\\"default\\\"]\\n5:I[1959,[],\\\"ClientPageRoot\\\"]\\n6:I[7322,[\\\"6199\\\",\\\"static/chunks/6199-1f80e53ed6f56c4f.js\\\",\\\"8974\\\",\\\"static/chunks/app/page-fb95553a59ea9ea9.js\\\"],\\\"default\\\"]\\n9:I[4431,[],\\\"OutletBoundary\\\"]\\nb:I[5278,[],\\\"AsyncMetadataOutlet\\\"]\\nd:I[4431,[],\\\"ViewportBoundary\\\"]\\nf:I[4431,[],\\\"MetadataBoundary\\\"]\\n10:\\\"$Sreact.suspense\\\"\\n12:I[7150,[],\\\"\\\"]\\n:HL[\\\"/_next/static/css/51f9145bbedb4b0e.css\\\",\\\"style\\\"]\\n:HL[\\\"/_next/static/css/c9a8dcc"
+  },
+  "eventsCount": 1,
+  "events": [
+    {
+      "scenario": "login",
+      "type": "scenario_error",
+      "error": "TimeoutError: locator.click: Timeout 8000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('link', { name: /log in/i })\u001b[22m\n"
+    }
+  ]
+}

@@ -1,0 +1,2196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Puli-AI QA Cycle Report</title>
+  <style>
+    :root {
+      --bg: #f5f5f7;
+      --bg-soft: #ffffff;
+      --surface: rgba(255, 255, 255, 0.82);
+      --line: #d2d2d7;
+      --line-strong: #c7c7cc;
+      --txt: #1d1d1f;
+      --muted: #6e6e73;
+      --accent: #0071e3;
+      --accent-soft: #e8f2ff;
+      --good: #1d8f5a;
+      --warn: #b26a00;
+      --bad: #c4281b;
+      --shadow-soft: 0 8px 24px rgba(15, 23, 42, 0.06);
+      --shadow-strong: 0 18px 44px rgba(15, 23, 42, 0.1);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { margin: 0; }
+
+    body {
+      min-height: 100vh;
+      color: var(--txt);
+      font-family: "SF Pro Text", "SF Pro Display", "Avenir Next", "Helvetica Neue", "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      background:
+        radial-gradient(64rem 28rem at 8% -16%, rgba(0, 113, 227, 0.11), transparent 60%),
+        radial-gradient(52rem 24rem at 100% -12%, rgba(0, 113, 227, 0.07), transparent 62%),
+        linear-gradient(180deg, #f8f8fa 0%, var(--bg) 34%, #efeff3 100%);
+    }
+
+    .frame {
+      width: min(1220px, calc(100% - 2.8rem));
+      margin: 1.45rem auto 2.25rem;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 80px 1fr auto;
+      gap: 1rem;
+      align-items: center;
+      padding: 1rem 1.15rem;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: var(--surface);
+      backdrop-filter: blur(18px);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .logo-wrap {
+      width: 68px;
+      height: 68px;
+      display: grid;
+      place-items: center;
+      border-radius: 16px;
+      background: linear-gradient(180deg, #ffffff, #f2f3f7);
+      border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .logo-wrap img {
+      width: 56px;
+      height: 56px;
+      object-fit: contain;
+    }
+
+    .brand h1 {
+      margin: 0;
+      letter-spacing: -0.01em;
+      font-size: clamp(1.26rem, 2vw, 1.88rem);
+      font-weight: 700;
+      line-height: 1.08;
+      color: #111114;
+    }
+
+    .brand p {
+      margin: 0.3rem 0 0;
+      color: var(--muted);
+      font-size: 0.86rem;
+      letter-spacing: 0.01em;
+      line-height: 1.35;
+    }
+
+    .hero-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.42rem;
+      justify-content: flex-end;
+    }
+
+    .badge {
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: #2e2e33;
+      font-size: 0.69rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 700;
+      line-height: 1;
+      white-space: nowrap;
+      padding: 0.42rem 0.65rem;
+    }
+
+    .tabs {
+      margin-top: 0.95rem;
+      display: inline-flex;
+      gap: 0.2rem;
+      padding: 0.23rem;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--surface);
+      backdrop-filter: blur(14px);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .tab-btn {
+      border: 0;
+      border-radius: 11px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.82rem;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      font-weight: 650;
+      padding: 0.54rem 0.88rem;
+      transition: all 160ms ease;
+    }
+
+    .tab-btn:hover { color: #2f2f35; }
+
+    .tab-btn.active {
+      background: #ffffff;
+      color: #111114;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12);
+    }
+
+    .panel {
+      display: none;
+      padding-top: 1rem;
+    }
+
+    .panel.active { display: block; }
+
+    .cycle-grid {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr;
+      gap: 1rem;
+    }
+
+    .card {
+      background: var(--bg-soft);
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      box-shadow: var(--shadow-soft);
+      padding: 1.15rem 1.2rem 1.08rem;
+    }
+
+    .card h3 {
+      margin: 0;
+      font-size: 0.95rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #2e2e33;
+      font-weight: 700;
+    }
+
+    .sub {
+      margin: 0.4rem 0 0;
+      color: var(--muted);
+      font-size: 0.85rem;
+      line-height: 1.45;
+    }
+
+    .metrics {
+      margin-top: 0.9rem;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.62rem;
+    }
+
+    .metric {
+      border: 1px solid #e5e5ea;
+      border-radius: 14px;
+      background: linear-gradient(180deg, #ffffff 0%, #f8f8fa 100%);
+      padding: 0.68rem 0.72rem;
+      min-height: 76px;
+    }
+
+    .metric .k {
+      color: var(--muted);
+      font-size: 0.67rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+    }
+
+    .metric .v {
+      margin-top: 0.24rem;
+      color: #111114;
+      font-size: 1.22rem;
+      line-height: 1.15;
+      font-weight: 700;
+    }
+
+    .metric .v-note {
+      margin-top: 0.24rem;
+      color: #111114;
+      font-size: 0.9rem;
+      line-height: 1.35;
+      font-weight: 600;
+    }
+
+    .status-done { color: var(--good); }
+
+    .platforms {
+      margin-top: 0.82rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.52rem;
+    }
+
+    .platform {
+      border-radius: 999px;
+      border: 1px solid #d8d8de;
+      background: #fff;
+      color: #303036;
+      font-size: 0.76rem;
+      font-weight: 650;
+      letter-spacing: 0.01em;
+      white-space: nowrap;
+      padding: 0.34rem 0.56rem;
+    }
+
+    .region-wrap { margin-top: 1rem; }
+
+    .region-copy h4 {
+      margin: 0;
+      color: #2d2d32;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+    }
+
+    .region-copy p {
+      margin: 0.35rem 0 0;
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.45;
+      max-width: 48ch;
+    }
+
+    .region-tags {
+      margin-top: 0.52rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .region-tag {
+      border-radius: 999px;
+      border: 1px solid #d8d8de;
+      background: #fff;
+      color: #242429;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      padding: 0.32rem 0.56rem;
+    }
+
+    .quality-wrap {
+      margin-top: 1.05rem;
+      display: flex;
+      align-items: center;
+      gap: 1.1rem;
+    }
+
+    .quality-ring {
+      width: 180px;
+      min-width: 180px;
+      aspect-ratio: 1 / 1;
+      border-radius: 50%;
+      background: conic-gradient(var(--bad) 72deg, #e6e8ef 72deg 360deg);
+      display: grid;
+      place-items: center;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+    }
+
+    .quality-ring span {
+      width: 140px;
+      min-width: 140px;
+      aspect-ratio: 1 / 1;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: #fff;
+      border: 1px solid #e4e6ee;
+      color: #111114;
+      font-size: 1.7rem;
+      font-weight: 750;
+      letter-spacing: -0.01em;
+    }
+
+    .quality-copy strong {
+      display: block;
+      color: #1d1d1f;
+      font-size: 1.08rem;
+      line-height: 1.25;
+      font-weight: 750;
+      max-width: 36ch;
+    }
+
+    .quality-copy p {
+      margin: 0.45rem 0 0;
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.45;
+    }
+
+    .pie-layout {
+      margin-top: 0.75rem;
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 0.9rem;
+      align-items: center;
+    }
+
+    .pie-box {
+      min-height: 220px;
+      display: grid;
+      place-items: center;
+      border-radius: 18px;
+      border: 1px solid #e4e6ee;
+      background: linear-gradient(180deg, #ffffff 0%, #f8f9fc 100%);
+    }
+
+    .legend {
+      display: grid;
+      gap: 0.42rem;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.6rem;
+      border-radius: 12px;
+      border: 1px solid #e7e8ef;
+      background: #fff;
+      padding: 0.56rem 0.65rem;
+      color: #2b2b31;
+      font-size: 0.82rem;
+    }
+
+    .legend-left {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.48rem;
+    }
+
+    .dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      border: 1px solid rgba(0, 0, 0, 0.14);
+    }
+
+    .table-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.66rem;
+      margin-bottom: 0.6rem;
+    }
+
+    .table-top h3 {
+      margin: 0;
+      color: #2e2e33;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+    }
+
+    .btn {
+      border-radius: 999px;
+      border: 1px solid #d3d5de;
+      background: #fff;
+      color: #202026;
+      font-size: 0.71rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 700;
+      padding: 0.47rem 0.82rem;
+      cursor: pointer;
+      transition: all 140ms ease;
+    }
+
+    .btn:hover {
+      border-color: #b6c8e9;
+      background: #f3f8ff;
+      color: #0f3d78;
+    }
+
+    .btn.secondary {
+      background: #f8f9fc;
+      border-color: #d9dbe5;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: 16px;
+      border: 1px solid #e1e3eb;
+      background: #fff;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 980px;
+    }
+
+    thead th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      text-align: left;
+      color: #6f6f78;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #f7f8fb;
+      border-bottom: 1px solid #e3e5ed;
+      padding: 0.7rem 0.62rem;
+    }
+
+    tbody td {
+      color: #25252b;
+      font-size: 0.82rem;
+      line-height: 1.42;
+      border-bottom: 1px solid #ecedf3;
+      vertical-align: top;
+      padding: 0.64rem 0.62rem;
+    }
+
+    tbody tr:hover td { background: #f8fbff; }
+
+    .sev {
+      display: inline-block;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      padding: 0.16rem 0.5rem;
+      font-size: 0.66rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 700;
+      line-height: 1.1;
+    }
+
+    .sev-high {
+      color: #8a1f16;
+      background: #ffe7e3;
+      border-color: #ffc8c1;
+    }
+
+    .sev-medium {
+      color: #7f4b00;
+      background: #fff2dd;
+      border-color: #ffe0b3;
+    }
+
+    .sev-low {
+      color: #0f4e87;
+      background: #e7f2ff;
+      border-color: #cde4ff;
+    }
+
+    .status-chip {
+      display: inline-block;
+      border-radius: 999px;
+      border: 1px solid #d7dbe7;
+      background: #f7f9ff;
+      color: #3e4555;
+      font-size: 0.67rem;
+      font-weight: 650;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+      text-transform: uppercase;
+      padding: 0.15rem 0.45rem;
+    }
+
+    a.ev {
+      color: var(--accent);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(0, 113, 227, 0.34);
+      margin-right: 0.3rem;
+      white-space: nowrap;
+      font-weight: 600;
+    }
+
+    a.ev:hover { color: #0052a8; }
+
+    .foot-note {
+      margin-top: 0.7rem;
+      color: var(--muted);
+      font-size: 0.8rem;
+      line-height: 1.45;
+    }
+
+    .md-output {
+      margin-top: 0.72rem;
+      width: 100%;
+      min-height: 156px;
+      resize: vertical;
+      border-radius: 14px;
+      border: 1px solid #dde0e9;
+      background: #fafbff;
+      color: #26262d;
+      padding: 0.74rem;
+      font-size: 0.79rem;
+      line-height: 1.4;
+      font-family: "SFMono-Regular", Menlo, Consolas, monospace;
+    }
+
+    .a11y-grid {
+      margin-top: 0.78rem;
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 0.85rem;
+      align-items: stretch;
+    }
+
+    .a11y-score-card {
+      border-radius: 16px;
+      border: 1px solid #e3e6ef;
+      background: #fff;
+      padding: 0.72rem;
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .a11y-ring {
+      --pct: 41;
+      width: 90px;
+      min-width: 90px;
+      aspect-ratio: 1 / 1;
+      border-radius: 50%;
+      background: conic-gradient(var(--warn) calc(var(--pct) * 3.6deg), #ebedf4 0);
+      display: grid;
+      place-items: center;
+    }
+
+    .a11y-ring span {
+      width: 70px;
+      min-width: 70px;
+      aspect-ratio: 1 / 1;
+      border-radius: 50%;
+      border: 1px solid #e2e5ee;
+      background: #fff;
+      color: #222228;
+      font-size: 0.9rem;
+      font-weight: 700;
+      display: grid;
+      place-items: center;
+    }
+
+    .a11y-note {
+      margin-top: 0.65rem;
+      color: var(--muted);
+      font-size: 0.8rem;
+      line-height: 1.45;
+    }
+
+    @media (max-width: 980px) {
+      .frame {
+        width: min(1220px, calc(100% - 1.4rem));
+        margin: 1rem auto 1.6rem;
+      }
+
+      .hero {
+        grid-template-columns: 60px 1fr;
+        padding: 0.82rem 0.86rem;
+      }
+
+      .logo-wrap {
+        width: 52px;
+        height: 52px;
+        border-radius: 13px;
+      }
+
+      .logo-wrap img {
+        width: 42px;
+        height: 42px;
+      }
+
+      .hero-badges {
+        grid-column: 1 / -1;
+        justify-content: flex-start;
+      }
+
+      .tabs {
+        width: 100%;
+        overflow-x: auto;
+      }
+
+      .cycle-grid,
+      .a11y-grid,
+      .pie-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .metrics {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .quality-wrap {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .quality-ring {
+        width: 150px;
+        min-width: 150px;
+      }
+
+      .quality-ring span {
+        width: 116px;
+        min-width: 116px;
+        font-size: 1.36rem;
+      }
+
+      table { min-width: 820px; }
+    }
+
+    @media (max-width: 620px) {
+      .metrics { grid-template-columns: 1fr; }
+      .card { padding: 0.92rem 0.92rem 0.9rem; }
+      .badge { font-size: 0.64rem; }
+    }
+
+    /* Dark mode + Apple-like premium polish */
+    :root {
+      --bg: #06070c;
+      --bg-soft: rgba(16, 18, 27, 0.72);
+      --surface: rgba(20, 23, 34, 0.74);
+      --line: rgba(255, 255, 255, 0.12);
+      --line-strong: rgba(255, 255, 255, 0.2);
+      --txt: #f5f5f7;
+      --muted: #a1a1aa;
+      --accent: #0a84ff;
+      --accent-soft: rgba(10, 132, 255, 0.18);
+      --good: #34c759;
+      --warn: #ff9f0a;
+      --bad: #ff453a;
+      --shadow-soft: 0 16px 40px rgba(0, 0, 0, 0.4);
+      --shadow-strong: 0 24px 60px rgba(0, 0, 0, 0.52);
+    }
+
+    body {
+      position: relative;
+      color: var(--txt);
+      background:
+        radial-gradient(62rem 32rem at 8% -10%, rgba(10, 132, 255, 0.24), transparent 60%),
+        radial-gradient(50rem 26rem at 100% -8%, rgba(94, 92, 230, 0.2), transparent 64%),
+        radial-gradient(34rem 18rem at 65% 110%, rgba(52, 199, 89, 0.08), transparent 72%),
+        linear-gradient(180deg, #07080f 0%, #05060d 42%, #03040a 100%);
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(34rem 20rem at 24% 12%, rgba(112, 183, 255, 0.18), transparent 70%),
+        radial-gradient(28rem 16rem at 82% 20%, rgba(141, 129, 255, 0.16), transparent 72%);
+      opacity: 0.45;
+      z-index: -1;
+    }
+
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 38%, rgba(0, 0, 0, 0.32) 100%);
+      z-index: -1;
+    }
+
+    .hero,
+    .card {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::after,
+    .card::after {
+      content: "";
+      position: absolute;
+      inset: -40% -30% auto auto;
+      width: 290px;
+      height: 290px;
+      border-radius: 50%;
+      pointer-events: none;
+      background: radial-gradient(circle, rgba(10, 132, 255, 0.24) 0%, rgba(10, 132, 255, 0) 70%);
+      transform: translate(12%, -18%);
+      z-index: -1;
+    }
+
+    .hero,
+    .tabs,
+    .card {
+      background: var(--surface);
+      border-color: rgba(255, 255, 255, 0.08);
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(22px);
+    }
+
+    .brand h1,
+    .card h3,
+    .metric .v,
+    .metric .v-note,
+    .quality-copy strong,
+    .table-top h3 {
+      color: #f5f5f7;
+    }
+
+    .brand p,
+    .sub,
+    .metric .k,
+    .region-copy p,
+    .region-copy h4,
+    .foot-note,
+    .a11y-note {
+      color: #a1a1aa;
+    }
+
+    .logo-wrap {
+      background: linear-gradient(160deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04));
+      border-color: rgba(255, 255, 255, 0.14);
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.08);
+    }
+
+    .hero-badges {
+      gap: 0;
+    }
+
+    .badge {
+      background: transparent;
+      border: 0;
+      color: #c7c7d1;
+      padding: 0;
+      text-transform: none;
+      letter-spacing: 0.03em;
+      font-size: 0.74rem;
+      font-weight: 600;
+    }
+
+    .badge + .badge::before {
+      content: "•";
+      margin: 0 0.45rem;
+      color: rgba(255, 255, 255, 0.35);
+    }
+
+    .platform,
+    .region-tag {
+      background: transparent;
+      border: 0;
+      color: #cfd0d9;
+      padding: 0;
+      text-transform: none;
+      font-weight: 560;
+    }
+
+    .platform::before,
+    .region-tag::before {
+      content: "• ";
+      color: rgba(154, 196, 255, 0.9);
+    }
+
+    .tab-btn {
+      color: #a1a1aa;
+    }
+
+    .tab-btn:hover {
+      color: #ececf2;
+    }
+
+    .tab-btn.active {
+      color: #ffffff;
+      background: linear-gradient(180deg, rgba(10, 132, 255, 0.55), rgba(10, 132, 255, 0.32));
+      box-shadow: 0 8px 18px rgba(10, 132, 255, 0.33), inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+    }
+
+    .metrics {
+      gap: 0.9rem;
+    }
+
+    .metric {
+      background: transparent;
+      border: 0;
+      border-left: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 0;
+      min-height: auto;
+      padding: 0.06rem 0 0.06rem 0.72rem;
+    }
+
+    .metrics .metric:first-child {
+      border-left: 0;
+      padding-left: 0;
+    }
+
+    .status-done { color: var(--good); }
+
+    .pie-box {
+      background: transparent;
+      border: 0;
+      box-shadow: none;
+    }
+
+    .legend-item {
+      background: transparent;
+      border: 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 0;
+      color: #e7e7ed;
+      padding-left: 0.1rem;
+      padding-right: 0.1rem;
+    }
+
+    .dot {
+      border-color: rgba(255, 255, 255, 0.22);
+    }
+
+    .quality-ring {
+      background: conic-gradient(var(--bad) 72deg, rgba(255, 255, 255, 0.14) 72deg 360deg);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+    }
+
+    .quality-ring span {
+      background: #0e1019;
+      border-color: rgba(255, 255, 255, 0.16);
+      color: #ffffff;
+    }
+
+    .btn {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.18);
+      color: #f2f2f6;
+    }
+
+    .btn:hover {
+      background: rgba(10, 132, 255, 0.2);
+      border-color: rgba(10, 132, 255, 0.42);
+      color: #ffffff;
+    }
+
+    .btn.secondary {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .table-wrap {
+      background: transparent;
+      border: 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.14);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 0;
+    }
+
+    thead th {
+      background: rgba(10, 12, 19, 0.92);
+      border-bottom-color: rgba(255, 255, 255, 0.12);
+      color: #a6a6b1;
+    }
+
+    tbody td {
+      color: #e7e7ed;
+      border-bottom-color: rgba(255, 255, 255, 0.09);
+    }
+
+    tbody tr:hover td { background: rgba(10, 132, 255, 0.1); }
+
+    .sev-high {
+      color: #ffd6d2;
+      background: rgba(255, 69, 58, 0.2);
+      border-color: rgba(255, 69, 58, 0.44);
+    }
+
+    .sev-medium {
+      color: #ffe9c3;
+      background: rgba(255, 159, 10, 0.2);
+      border-color: rgba(255, 159, 10, 0.44);
+    }
+
+    .sev-low {
+      color: #d6e7ff;
+      background: rgba(10, 132, 255, 0.2);
+      border-color: rgba(10, 132, 255, 0.42);
+    }
+
+    .status-chip {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.18);
+      color: #d8d8df;
+    }
+
+    a.ev {
+      color: #64b0ff;
+      border-bottom-color: rgba(100, 176, 255, 0.42);
+    }
+
+    a.ev:hover { color: #9ecfff; }
+
+    .md-output {
+      background: rgba(11, 13, 20, 0.86);
+      border-color: rgba(255, 255, 255, 0.14);
+      color: #ececf2;
+    }
+
+    .a11y-score-card {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.13);
+    }
+
+    .a11y-ring {
+      background: conic-gradient(var(--warn) calc(var(--pct) * 3.6deg), rgba(255, 255, 255, 0.14) 0);
+    }
+
+    .a11y-ring span {
+      background: #0e1019;
+      border-color: rgba(255, 255, 255, 0.16);
+      color: #ececf2;
+    }
+
+    /* Gemini-inspired v2 polish */
+    :root {
+      --accent-2: #7a7dff;
+      --accent-3: #35e6b8;
+    }
+
+    .frame {
+      position: relative;
+      isolation: isolate;
+    }
+
+    .frame::before,
+    .frame::after {
+      content: "";
+      position: absolute;
+      inset: -18% -10% auto auto;
+      width: 460px;
+      height: 460px;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: -1;
+      filter: blur(22px);
+      opacity: 0.5;
+    }
+
+    .frame::before {
+      background: radial-gradient(circle, rgba(122, 125, 255, 0.32) 0%, rgba(122, 125, 255, 0) 72%);
+      transform: translate(24%, -16%);
+    }
+
+    .frame::after {
+      inset: auto auto -26% -14%;
+      background: radial-gradient(circle, rgba(53, 230, 184, 0.22) 0%, rgba(53, 230, 184, 0) 74%);
+    }
+
+    .hero,
+    .card {
+      border-radius: 26px;
+      border-color: rgba(255, 255, 255, 0.09);
+      box-shadow: 0 22px 58px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+
+    .hero {
+      background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0)),
+        var(--surface);
+    }
+
+    .brand h1 {
+      background: linear-gradient(100deg, #ffffff 0%, #d8dcff 50%, #9be7ff 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      letter-spacing: -0.015em;
+    }
+
+    .brand p {
+      color: #c0c1ca;
+    }
+
+    .tabs {
+      border-color: rgba(255, 255, 255, 0.12);
+      background: rgba(22, 24, 36, 0.62);
+    }
+
+    .tab-btn.active {
+      background:
+        linear-gradient(140deg, rgba(10, 132, 255, 0.74), rgba(122, 125, 255, 0.62));
+      box-shadow:
+        0 12px 26px rgba(61, 98, 255, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.24);
+    }
+
+    .panel.active {
+      animation: panelFadeIn 340ms ease-out;
+    }
+
+    @keyframes panelFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .card {
+      transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(134, 162, 255, 0.28);
+      box-shadow: 0 28px 62px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    }
+
+    .metrics {
+      gap: 1rem;
+    }
+
+    .metric {
+      border-left-color: rgba(255, 255, 255, 0.22);
+    }
+
+    .metric .k {
+      color: #aeb0be;
+    }
+
+    .metric .v {
+      color: #f7f7fb;
+      text-shadow: 0 0 16px rgba(119, 169, 255, 0.2);
+    }
+
+    .platform,
+    .region-tag {
+      color: #d2d4de;
+    }
+
+    .quality-ring {
+      background: conic-gradient(#ff5f57 0deg, #ff8f45 72deg, rgba(255, 255, 255, 0.14) 72deg 360deg);
+      box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.14),
+        0 12px 26px rgba(255, 95, 87, 0.16);
+    }
+
+    .quality-ring span {
+      background:
+        radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.08), transparent 42%),
+        #0d1019;
+    }
+
+    .pie-box {
+      min-height: 210px;
+    }
+
+    .legend-item {
+      border-bottom-color: rgba(255, 255, 255, 0.16);
+      transition: border-color 160ms ease, background 160ms ease;
+    }
+
+    .legend-item:hover {
+      border-bottom-color: rgba(122, 125, 255, 0.46);
+      background: rgba(122, 125, 255, 0.08);
+    }
+
+    .table-top h3 {
+      letter-spacing: 0.11em;
+    }
+
+    .btn {
+      border-color: rgba(255, 255, 255, 0.22);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.03));
+    }
+
+    .btn:hover {
+      background: linear-gradient(160deg, rgba(10, 132, 255, 0.3), rgba(122, 125, 255, 0.22));
+      box-shadow: 0 10px 22px rgba(72, 106, 255, 0.24);
+    }
+
+    .table-wrap {
+      border-top-color: rgba(255, 255, 255, 0.18);
+      border-bottom-color: rgba(255, 255, 255, 0.18);
+    }
+
+    thead th {
+      background:
+        linear-gradient(180deg, rgba(17, 19, 29, 0.95), rgba(12, 14, 22, 0.95));
+    }
+
+    tbody tr:hover td {
+      background: rgba(122, 125, 255, 0.12);
+    }
+
+    .status-chip {
+      background: rgba(122, 125, 255, 0.14);
+      border-color: rgba(122, 125, 255, 0.28);
+      color: #dadbfd;
+    }
+
+    .md-output {
+      background:
+        linear-gradient(180deg, rgba(18, 21, 33, 0.95), rgba(10, 12, 20, 0.95));
+    }
+
+    @media (max-width: 980px) {
+      .hero,
+      .card {
+        border-radius: 20px;
+      }
+
+      .card:hover {
+        transform: none;
+      }
+
+      .frame::before,
+      .frame::after {
+        width: 300px;
+        height: 300px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="frame">
+    <header class="hero">
+      <div class="logo-wrap">
+        <img src="/puli-logo.png" alt="Puli logo" onerror="if(!this.dataset.step){this.dataset.step='1';this.src='puli-logo.png';}else if(this.dataset.step==='1'){this.dataset.step='2';this.src='/bugs/puli-logo.png';}" />
+      </div>
+      <div class="brand">
+        <h1>Puli AI Quality Report</h1>
+        <p>The First Quality AI Agency · Mobile Product Testing</p>
+      </div>
+      <div class="hero-badges">
+        <span class="badge">Cycle Status: Done</span>
+        <span class="badge">Quality Score: 20%</span>
+        <span class="badge" id="totalBugsBadge">Total Bugs: 27</span>
+      </div>
+    </header>
+
+    <nav class="tabs" aria-label="Report sections">
+      <button class="tab-btn active" data-tab="cycle">Cycle</button>
+      <button class="tab-btn" data-tab="bugs">Bugs</button>
+      <button class="tab-btn" data-tab="accessibility">Accessibility</button>
+    </nav>
+
+    <section id="tab-cycle" class="panel active">
+      <div class="cycle-grid">
+        <article class="card">
+          <h3>Cycle Summary</h3>
+          <p class="sub">Current execution set and delivery health.</p>
+
+          <div class="metrics">
+            <div class="metric">
+              <div class="k">Platforms</div>
+              <div class="v">8</div>
+            </div>
+            <div class="metric">
+              <div class="k">Duration</div>
+              <div class="v">01h 52m</div>
+            </div>
+            <div class="metric">
+              <div class="k">Cycle Status</div>
+              <div class="v status-done">Done</div>
+            </div>
+          </div>
+
+          <div class="platforms">
+            <span class="platform">Iphone Air</span>
+            <span class="platform">Iphone 14 Pro Max</span>
+            <span class="platform">Safari Iphone</span>
+            <span class="platform">Safari Mac</span>
+            <span class="platform">Chrome Mac</span>
+            <span class="platform">Android Chrome</span>
+            <span class="platform">Firefox Android</span>
+            <span class="platform">Firefox Mac</span>
+          </div>
+
+          <div class="metrics" style="margin-top: 0.85rem;">
+            <div class="metric">
+              <div class="k">Apps Tested</div>
+              <div class="v">4</div>
+            </div>
+            <div class="metric">
+              <div class="k">AI TESTERS</div>
+              <div class="v">5</div>
+            </div>
+            <div class="metric">
+              <div class="k">HUMAN TESTERS</div>
+              <div class="v">4</div>
+            </div>
+          </div>
+
+          <div class="platforms">
+            <span class="platform">eView</span>
+            <span class="platform">Clawdet</span>
+            <span class="platform">Clawqa</span>
+            <span class="platform">Moneyclaw</span>
+          </div>
+
+          <div class="region-wrap">
+            <div class="region-copy">
+              <h4>Test Operation Areas</h4>
+              <p>Execution coverage in this cycle was operated from two active regions.</p>
+              <div class="region-tags">
+                <span class="region-tag">Europe</span>
+                <span class="region-tag">USA</span>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="card">
+          <h3>Bug Type Distribution</h3>
+          <p class="sub" id="bugDistributionSub">27 loaded bugs across 4 tested apps.</p>
+          <div class="pie-layout">
+            <div class="pie-box">
+              <canvas id="bugPie" width="210" height="210" aria-label="Bug type pie chart"></canvas>
+            </div>
+            <div class="legend" id="pieLegend"></div>
+          </div>
+          <p class="foot-note" id="bugDistributionNote">
+            Note: distribution is grouped into UX/UI, Functionality, and Data Integrity from loaded bug types.
+          </p>
+
+          <div class="quality-wrap">
+            <div class="quality-ring" aria-label="Quality score 20 percent">
+              <span>20%</span>
+            </div>
+            <div class="quality-copy">
+              <strong>The overall quality level is low.</strong>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="tab-bugs" class="panel">
+      <article class="card">
+        <div class="table-top">
+          <h3>Bug Lists By Tested App</h3>
+        </div>
+
+        <p class="sub">Bugs are organized per tested app. Data is loaded from agent findings and Yoni A workbook import.</p>
+
+        <div class="table-top" style="margin-top: .75rem;">
+          <h3>eView</h3>
+        </div>
+        <div class="table-wrap">
+          <table id="eviewTable">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Severity</th>
+                <th>Type</th>
+                <th>Platform</th>
+                <th>Status</th>
+                <th>Evidence</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="table-top" style="margin-top: .75rem;">
+          <h3>Clawdet</h3>
+        </div>
+        <div class="table-wrap">
+          <table id="clawdetTable">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Severity</th>
+                <th>Type</th>
+                <th>Platform</th>
+                <th>Status</th>
+                <th>Evidence</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="table-top" style="margin-top: .9rem;">
+          <h3>Clawqa</h3>
+        </div>
+        <div class="table-wrap">
+          <table id="clawqaTable">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Severity</th>
+                <th>Type</th>
+                <th>Platform</th>
+                <th>Status</th>
+                <th>Evidence</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <div class="table-top" style="margin-top: .9rem;">
+          <h3>Moneyclaw</h3>
+        </div>
+        <div class="table-wrap">
+          <table id="moneyclawTable">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Severity</th>
+                <th>Type</th>
+                <th>Platform</th>
+                <th>Status</th>
+                <th>Evidence</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+
+        <textarea id="mdOutput" class="md-output" aria-label="Markdown export preview"></textarea>
+
+        <p class="foot-note">
+          Share Clawqa and Moneyclaw bug lists and I will populate their sections immediately.
+        </p>
+      </article>
+    </section>
+
+    <section id="tab-accessibility" class="panel">
+      <article class="card">
+        <h3>Accessibility Score (iPhone Safari)</h3>
+        <p class="sub">Practical score based on on-device WDA audit + manual VoiceOver verification.</p>
+
+        <div class="a11y-grid">
+          <div class="a11y-score-card">
+            <div id="a11yRing" class="a11y-ring" aria-label="Accessibility score 41 out of 100">
+              <span id="a11yScoreText">41/100</span>
+            </div>
+            <div class="quality-copy">
+              <strong id="a11yStatus">Accessibility Status: At Risk</strong>
+              <p id="a11yMethod">On-device iPhone Safari checks reveal significant interaction and target-size defects.</p>
+            </div>
+          </div>
+
+          <div class="metrics">
+            <div class="metric">
+              <div class="k">Tracked Issues</div>
+              <div class="v" id="a11yTotal">10</div>
+            </div>
+            <div class="metric">
+              <div class="k">High</div>
+              <div class="v" id="a11yHigh">8</div>
+            </div>
+            <div class="metric">
+              <div class="k">Medium/Low</div>
+              <div class="v" id="a11yMedLow">2</div>
+            </div>
+          </div>
+        </div>
+
+        <p class="a11y-note">
+          Reference baseline used for touch controls: WCAG 2.2 target size minimum (24x24 CSS px). Several critical controls are below this threshold.
+        </p>
+      </article>
+
+      <article class="card" style="margin-top: 1rem;">
+        <div class="table-top">
+          <h3>Accessibility Issue List</h3>
+        </div>
+        <div class="table-wrap">
+          <table id="accessibilityTable">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Issue</th>
+                <th>Severity</th>
+                <th>WCAG</th>
+                <th>Source</th>
+                <th>Evidence</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    const tabs = Array.from(document.querySelectorAll('.tab-btn'));
+    const panels = {
+      cycle: document.getElementById('tab-cycle'),
+      bugs: document.getElementById('tab-bugs'),
+      accessibility: document.getElementById('tab-accessibility')
+    };
+
+    tabs.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        tabs.forEach((b) => b.classList.remove('active'));
+        Object.values(panels).forEach((p) => p.classList.remove('active'));
+        btn.classList.add('active');
+        panels[btn.dataset.tab].classList.add('active');
+      });
+    });
+
+    let pieData = [];
+
+    const eviewBugs = [
+      {
+        id: 'PULI-EVIEW-001',
+        title: 'Home page has horizontal overflow and clipped ticker content on mobile',
+        severity: 'medium',
+        priority: 'HIGH',
+        type: 'Responsive / Layout',
+        platform: 'iPhone Air Safari',
+        status: 'Open',
+        evidence: [
+          { label: 'Screenshot', href: './eview-20260313/00-home.png' },
+          { label: 'Source XML', href: './eview-20260313/00-home.xml' }
+        ]
+      },
+      {
+        id: 'PULI-EVIEW-002',
+        title: 'Heat Map tiles render partially off-screen and are cut at right edge',
+        severity: 'high',
+        priority: 'HIGH',
+        type: 'Responsive / Layout',
+        platform: 'iPhone Air Safari',
+        status: 'Open',
+        evidence: [
+          { label: 'Screenshot', href: './eview-20260313-nav/02-Heat-Map.png' },
+          { label: 'Source XML', href: './eview-20260313-nav/02-Heat-Map.xml' }
+        ]
+      },
+      {
+        id: 'PULI-EVIEW-003',
+        title: 'Compare instrument picker shows overlapping result rows (unusable list)',
+        severity: 'high',
+        priority: 'CRITICAL',
+        type: 'Responsive / Layout',
+        platform: 'iPhone Air Safari',
+        status: 'Open',
+        evidence: [
+          { label: 'Screenshot', href: './eview-20260313-compare-actions2/01-after-addfirst.png' },
+          { label: 'Source XML', href: './eview-20260313-compare-actions2/01-after-addfirst.xml' }
+        ]
+      },
+      {
+        id: 'PULI-EVIEW-006',
+        title: 'Public sign-in deep links (/signin, /sign-in) return 404 while /login works',
+        severity: 'high',
+        priority: 'MEDIUM',
+        type: 'Routing / Deep Link',
+        platform: 'iPhone Air Safari',
+        status: 'Open',
+        evidence: [
+          { label: '/signin 404', href: './eview-20260313-routes/signin.png' },
+          { label: '/sign-in 404', href: './eview-20260313-routes/sign_in.png' },
+          { label: '/login works', href: './eview-20260313-routes/login.png' },
+          { label: 'Route XML', href: './eview-20260313-routes/signin.xml' }
+        ]
+      },
+      {
+        id: 'PULI-EVIEW-007',
+        title: 'DJ30 chart view fails to load in Markets.',
+        severity: 'high',
+        priority: 'HIGH',
+        type: 'Data / Market Accuracy',
+        platform: 'Chrome Mac',
+        status: 'Open',
+        evidence: [
+          { label: 'Video Evidence', href: 'https://drive.google.com/file/d/17uJsBQffa9ogIuqSq0nnRt3ilz0Y2QxQ/view?usp=drive_link' }
+        ]
+      },
+      {
+        id: 'PULI-EVIEW-008',
+        title: 'CNET instrument card renders without image.',
+        severity: 'low',
+        priority: 'LOW',
+        type: 'Data / Market Accuracy',
+        platform: 'Chrome Mac',
+        status: 'Open',
+        evidence: [
+          { label: 'Image Evidence', href: 'https://drive.google.com/file/d/1NyvCLWTUrvrQDBzFCvGAMTWx_aZx5P0p/view?usp=drive_link' }
+        ]
+      },
+      {
+        id: 'PULI-EVIEW-009',
+        title: 'CNET instrument details are inaccurate versus eToro/Yahoo Finance.',
+        severity: 'high',
+        priority: 'HIGH',
+        type: 'Data / Market Accuracy',
+        platform: 'Chrome Mac',
+        status: 'Open',
+        evidence: [
+          { label: 'Comparison Evidence', href: 'https://drive.google.com/file/d/146r7BG9XwZZSmLoKJNWw6douhOtQiGMK/view?usp=drive_link' }
+        ]
+      },
+      {
+        id: 'PULI-EVIEW-010',
+        title: 'Market status displays "Open" for most/all US exchange stocks when it should not.',
+        severity: 'high',
+        priority: 'HIGH',
+        type: 'Data / Market Accuracy',
+        platform: 'Chrome Mac',
+        status: 'Open',
+        evidence: [
+          { label: 'Status Evidence', href: 'https://drive.google.com/file/d/1s8orCHNdvEW1qzvc0uADkKQ_hpNJA21d/view?usp=drive_link' }
+        ]
+      },
+      {
+        id: 'PULI-EVIEW-011',
+        title: 'Sign in with eToro redirect completes but user session is not established.',
+        severity: 'high',
+        priority: 'HIGH',
+        type: 'Auth / Onboarding',
+        platform: 'Chrome Mac',
+        status: 'Open',
+        evidence: [
+          { label: 'Evidence', href: 'https://drive.google.com/file/d/1mSZJbXSW9_UjvPn0v3iPTAYRjfbcInIB/view?usp=drive_link' }
+        ]
+      }
+    ];
+
+    const clawdetBugs = [
+      {
+        id: 'PULI-CLAWDET-001',
+        title: 'Chat widget overlaps key feature content on home page (mobile).',
+        severity: 'low',
+        priority: 'HIGH',
+        type: 'Responsive / Layout',
+        platform: 'Firefox (mobile viewport)',
+        status: 'Open',
+        evidence: [
+          { label: 'Mobile overlap', href: '../output/playwright/clawdet-exploratory-20260313/07-mobile-overlap-check.png' },
+          { label: 'Exploratory report', href: '../output/playwright/clawdet-exploratory-20260313/clawdet-firefox-exploratory-report-2026-03-13.md' }
+        ]
+      },
+      {
+        id: 'PULI-CLAWDET-002',
+        title: 'Sticky header clips FAQ content on NanoFleets mobile page.',
+        severity: 'medium',
+        priority: 'HIGH',
+        type: 'Responsive / Layout',
+        platform: 'Firefox (mobile viewport)',
+        status: 'Open',
+        evidence: [
+          { label: 'Nanofleets mobile bottom', href: '../output/playwright/clawdet-exploratory-20260313/12-nanofleets-mobile-bottom.png' },
+          { label: 'Nanofleets mobile fold', href: '../output/playwright/clawdet-exploratory-20260313/11-nanofleets-mobile-fold.png' }
+        ]
+      },
+      {
+        id: 'PULI-CLAWDET-004',
+        title: '\"Continue with X\" redirects to configuration error state.',
+        severity: 'high',
+        priority: 'CRITICAL',
+        type: 'Auth / Onboarding',
+        platform: 'Firefox (desktop)',
+        status: 'Open',
+        evidence: [
+          { label: 'Error page screenshot', href: '../output/playwright/clawdet-exploratory-20260313/05-after-continue-x.png' },
+          { label: 'Run summary', href: '../output/playwright/clawdet-exploratory-20260313/exploratory-summary.json' }
+        ]
+      },
+      {
+        id: 'PULI-CLAWDET-005',
+        title: 'Invalid sign-up submission fails silently with no user-visible validation feedback.',
+        severity: 'medium',
+        priority: 'HIGH',
+        type: 'Form Validation UX',
+        platform: 'Firefox (desktop)',
+        status: 'Open',
+        evidence: [
+          { label: 'Invalid submit screenshot', href: '../output/playwright/clawdet-exploratory-20260313/06-invalid-submit-result.png' },
+          { label: 'No submit network proof', href: '../output/playwright/clawdet-exploratory-20260313/06-invalid-submit-network.json' }
+        ]
+      }
+    ];
+
+    const yoniClawdetBugs = [
+      {
+        id: 'PULI-CLAWDET-YA-001',
+        title: 'Chat requests fail in browser and Telegram bot with 401 authentication error.',
+        severity: 'critical',
+        priority: 'CRITICAL',
+        type: 'Auth / Session',
+        platform: 'Chrome Mac',
+        status: 'Open',
+        evidence: [
+          { label: 'Evidence 1', href: 'https://drive.google.com/file/d/1gEBWtTpzwT138ZMsfTrwp6ey4-l59vrz/view?usp=drive_link' },
+          { label: 'Evidence 2', href: 'https://drive.google.com/file/d/1c_m3Try3JKvthu64-K4Y1Oy8wEshvHVq/view?usp=drive_link' }
+        ]
+      },
+      {
+        id: 'PULI-CLAWDET-YA-002',
+        title: 'No logout option is available after login.',
+        severity: 'low',
+        priority: 'LOW',
+        type: 'UX / Usability',
+        platform: 'Chrome Mac',
+        status: 'Open',
+        evidence: []
+      },
+      {
+        id: 'PULI-CLAWDET-YA-003',
+        title: 'Feedback star-rating widget is hidden, blocking feedback submission.',
+        severity: 'low',
+        priority: 'MEDIUM',
+        type: 'UX / Usability',
+        platform: 'Chrome Mac',
+        status: 'Open',
+        evidence: [
+          { label: 'Evidence', href: 'https://drive.google.com/file/d/1o76ChoAWmZQPhejhq_FFcYS7ZxruCi9V/view?usp=drive_link' }
+        ]
+      },
+      {
+        id: 'PULI-CLAWDET-YA-004',
+        title: 'Feedback widget resizes unexpectedly when submitting a 5-star rating.',
+        severity: 'low',
+        priority: 'LOW',
+        type: 'UX / Usability',
+        platform: 'Chrome Mac',
+        status: 'Open',
+        evidence: [
+          { label: 'Evidence', href: 'https://drive.google.com/file/d/11kueLJmJ0kWmnNRVxYDIqXEXKehCJW9e/view?usp=drive_link' }
+        ]
+      },
+      {
+        id: 'PULI-CLAWDET-YA-005',
+        title: 'Login with X flow does not complete successfully.',
+        severity: 'high',
+        priority: 'MEDIUM',
+        type: 'Auth / Onboarding',
+        platform: 'Chrome Mac',
+        status: 'Open',
+        evidence: [
+          { label: 'Evidence', href: 'https://drive.google.com/file/d/1bN5VepTTL-C6_nBjK2OyPd42Ywb-jxp6/view?usp=drive_link' }
+        ]
+      }
+    ];
+
+    const yoniClawqaBugs = [
+      {
+        id: 'PULI-CLAWQA-YA-001',
+        title: 'Browse Tests page crashes after login (React runtime error #31).',
+        severity: 'critical',
+        priority: 'CRITICAL',
+        type: 'Stability / Crash',
+        platform: 'Chrome Mac',
+        status: 'Open',
+        evidence: [
+          { label: 'Evidence', href: 'https://drive.google.com/file/d/1aEFOvr5Sxr0YS7OWyspp6umqNYe-udCH/view?usp=drive_link' }
+        ]
+      },
+      {
+        id: 'PULI-CLAWQA-YA-002',
+        title: 'Bug Reports filter is missing the "Low" severity option.',
+        severity: 'low',
+        priority: 'LOW',
+        type: 'Filtering / Sorting',
+        platform: 'Chrome Mac',
+        status: 'Open',
+        evidence: [
+          { label: 'Evidence', href: 'https://drive.google.com/file/d/1v4xBolmSPzZHVGBuE3jP5Rqaneh5_GV5/view?usp=drive_link' }
+        ]
+      },
+      {
+        id: 'PULI-CLAWQA-YA-003',
+        title: 'Sort by severity places Low above Critical (incorrect ordering).',
+        severity: 'low',
+        priority: 'LOW',
+        type: 'Filtering / Sorting',
+        platform: 'Chrome Mac',
+        status: 'Open',
+        evidence: [
+          { label: 'Evidence', href: 'https://drive.google.com/file/d/1jZ0cAGciHgoOCWvjdq1-lqdYI1pYFbA6/view?usp=drive_link' }
+        ]
+      },
+      {
+        id: 'PULI-CLAWQA-YA-004',
+        title: 'Analytics graph line colors do not match legend colors.',
+        severity: 'medium',
+        priority: 'MEDIUM',
+        type: 'Data Visualization',
+        platform: 'Chrome Mac',
+        status: 'Open',
+        evidence: [
+          { label: 'Evidence', href: 'https://drive.google.com/file/d/18VG5OTMIq5qlSL5G6dHJ_vjyriz2N_W3/view?usp=drive_link' }
+        ]
+      }
+    ];
+
+    const yoniMoneyclawBugs = [
+      {
+        id: 'PULI-MONEYCLAW-YA-001',
+        title: 'Back navigation in Telegram connection funnel leads to empty screen.',
+        severity: 'medium',
+        priority: 'LOW',
+        type: 'Functional / Workflow',
+        platform: 'Chrome Mac',
+        status: 'Open',
+        evidence: [
+          { label: 'Evidence', href: 'https://drive.google.com/file/d/1puiSWcgmJuuRvPBdgF3f3wgF39Vb0u-A/view?usp=drive_link' }
+        ]
+      },
+      {
+        id: 'PULI-MONEYCLAW-YA-002',
+        title: '"Learn how to connect" button is non-responsive.',
+        severity: 'high',
+        priority: 'CRITICAL',
+        type: 'Functional / Workflow',
+        platform: 'Chrome Mac',
+        status: 'Open',
+        evidence: [
+          { label: 'Evidence', href: 'https://drive.google.com/file/d/1QJ2IZVZ68G2c9mSaaTJtanDCtUI_Xd0i/view?usp=drive_link' }
+        ]
+      },
+      {
+        id: 'PULI-MONEYCLAW-YA-003',
+        title: 'Bot enters loop after eToro connect and chat cannot be reached.',
+        severity: 'critical',
+        priority: 'CRITICAL',
+        type: 'Functional / Workflow',
+        platform: 'Chrome Mac',
+        status: 'Open',
+        evidence: [
+          { label: 'Evidence', href: 'https://drive.google.com/file/d/1TsKaL5pOK5vDCxq5hLMOeHhCuwHlvTe8/view?usp=drive_link' }
+        ]
+      },
+      {
+        id: 'PULI-MONEYCLAW-YA-004',
+        title: 'Displayed eToro data does not match direct eToro API values.',
+        severity: 'critical',
+        priority: 'CRITICAL',
+        type: 'Data / Market Accuracy',
+        platform: 'Chrome Mac',
+        status: 'Open',
+        evidence: [
+          { label: 'Evidence', href: 'https://drive.google.com/file/d/1mjBLw4Y2QuZkG15vq7QNpsXr8FgappVc/view?usp=drive_link' }
+        ]
+      },
+      {
+        id: 'PULI-MONEYCLAW-YA-005',
+        title: 'Post-connect flow gets stuck in loop; chat remains inaccessible.',
+        severity: 'critical',
+        priority: 'CRITICAL',
+        type: 'Functional / Workflow',
+        platform: 'Chrome Mac',
+        status: 'Open',
+        evidence: [
+          { label: 'Evidence', href: 'https://drive.google.com/file/d/1ZPcIxMyUkTp_rhS-SN7gGGKH-4y7FfZZ/view?usp=drive_link' }
+        ]
+      }
+    ];
+
+    const androidChromeBugs = {
+      eview: [],
+      clawdet: [],
+      clawqa: [],
+      moneyclaw: []
+    };
+
+    const accessibilityScore = {
+      score: 41,
+      status: 'At Risk',
+      total: 10,
+      high: 8,
+      medium: 1,
+      low: 1,
+      method: 'On-device iPhone Safari audit (WDA) + manual VoiceOver pass.'
+    };
+
+    const accessibilityIssues = [
+      {
+        id: 'PULI-EVIEW-A11Y-001',
+        title: 'VoiceOver cannot reliably activate the running stock ticker carousel on Home.',
+        severity: 'medium',
+        wcag: '2.1.1, 4.1.2',
+        source: 'Manual VoiceOver',
+        evidence: [
+          { label: 'A11y Report', href: './eview-a11y-automated-20260313-run2/06-a11y-report.md' }
+        ]
+      },
+      {
+        id: 'PULI-EVIEW-A11Y-002',
+        title: '\"Skip to main content\" interactive target is too short (148x22).',
+        severity: 'medium',
+        wcag: '2.5.8',
+        source: 'Automated WDA Audit',
+        evidence: [
+          { label: 'Audit JSON', href: './eview-a11y-automated-20260313-run2/04-ui-audit.json' },
+          { label: 'Screen', href: './eview-a11y-automated-20260313-run2/04-ui-audit.png' }
+        ]
+      },
+      {
+        id: 'PULI-EVIEW-A11Y-003',
+        title: 'Brand logo link target is extremely small (6x15).',
+        severity: 'medium',
+        wcag: '2.5.8',
+        source: 'Automated WDA Audit',
+        evidence: [
+          { label: 'Audit JSON', href: './eview-a11y-automated-20260313-run2/04-ui-audit.json' }
+        ]
+      },
+      {
+        id: 'PULI-EVIEW-A11Y-004',
+        title: 'Search field \"Search instruments\" has low target height (174x29).',
+        severity: 'medium',
+        wcag: '2.5.8',
+        source: 'Automated WDA Audit',
+        evidence: [
+          { label: 'Audit JSON', href: './eview-a11y-automated-20260313-run2/04-ui-audit.json' }
+        ]
+      },
+      {
+        id: 'PULI-EVIEW-A11Y-005',
+        title: '\"Keyboard shortcuts\" control is too small (27x27).',
+        severity: 'medium',
+        wcag: '2.5.8',
+        source: 'Automated WDA Audit',
+        evidence: [
+          { label: 'Audit JSON', href: './eview-a11y-automated-20260313-run2/04-ui-audit.json' }
+        ]
+      },
+      {
+        id: 'PULI-EVIEW-A11Y-006',
+        title: '\"Sign In\" button target height is too small (72x25).',
+        severity: 'medium',
+        wcag: '2.5.8',
+        source: 'Automated WDA Audit',
+        evidence: [
+          { label: 'Audit JSON', href: './eview-a11y-automated-20260313-run2/04-ui-audit.json' }
+        ]
+      },
+      {
+        id: 'PULI-EVIEW-A11Y-007',
+        title: 'Primary CTAs \"Launch Chart\" and \"Explore Markets\" are too short (23px height).',
+        severity: 'medium',
+        wcag: '2.5.8',
+        source: 'Automated WDA Audit',
+        evidence: [
+          { label: 'Audit JSON', href: './eview-a11y-automated-20260313-run2/04-ui-audit.json' },
+          { label: 'State Screen', href: './eview-a11y-automated-20260313-run2/03-screen-state.png' }
+        ]
+      },
+      {
+        id: 'PULI-EVIEW-A11Y-008',
+        title: 'Live ticker instrument links are undersized (about 24px height), reducing tap reliability.',
+        severity: 'medium',
+        wcag: '2.5.8',
+        source: 'Automated WDA Audit',
+        evidence: [
+          { label: 'Audit JSON', href: './eview-a11y-automated-20260313-run2/04-ui-audit.json' }
+        ]
+      },
+      {
+        id: 'PULI-EVIEW-A11Y-009',
+        title: 'Overlapping interactive controls detected, creating ambiguous touch targets.',
+        severity: 'medium',
+        wcag: '2.4.3, 2.5.8',
+        source: 'Automated WDA Audit',
+        evidence: [
+          { label: 'Audit JSON', href: './eview-a11y-automated-20260313-run2/04-ui-audit.json' }
+        ]
+      },
+      {
+        id: 'PULI-EVIEW-A11Y-010',
+        title: 'Potential text clipping risk on \"Keyboard shortcuts\" label at current width.',
+        severity: 'medium',
+        wcag: '1.4.10',
+        source: 'Automated WDA Audit',
+        evidence: [
+          { label: 'Audit JSON', href: './eview-a11y-automated-20260313-run2/04-ui-audit.json' }
+        ]
+      }
+    ];
+
+    const bugListsByApp = {
+      eview: [...eviewBugs, ...androidChromeBugs.eview],
+      clawdet: [...clawdetBugs, ...yoniClawdetBugs, ...androidChromeBugs.clawdet],
+      clawqa: [...yoniClawqaBugs, ...androidChromeBugs.clawqa],
+      moneyclaw: [...yoniMoneyclawBugs, ...androidChromeBugs.moneyclaw]
+    };
+
+    function getAllBugs() {
+      return Object.values(bugListsByApp).flat();
+    }
+
+    const aggregateTypeColorMap = {
+      'UX/UI': '#7a7dff',
+      'Functionality': '#ff6f61',
+      'Data Integrity': '#35e6b8'
+    };
+
+    const aggregateTypeMap = {
+      'Responsive / Layout': 'UX/UI',
+      'UX / Usability': 'UX/UI',
+      'Filtering / Sorting': 'UX/UI',
+      'Form Validation UX': 'UX/UI',
+      'Functional / Workflow': 'Functionality',
+      'Auth / Onboarding': 'Functionality',
+      'Routing / Deep Link': 'Functionality',
+      'Auth / Session': 'Functionality',
+      'Stability / Crash': 'Functionality',
+      'Data / Market Accuracy': 'Data Integrity',
+      'Data Visualization': 'Data Integrity'
+    };
+
+    function buildPieDataFromBugs() {
+      const counts = new Map([
+        ['UX/UI', 0],
+        ['Functionality', 0],
+        ['Data Integrity', 0]
+      ]);
+      getAllBugs().forEach((bug) => {
+        const group = aggregateTypeMap[bug.type] || 'Functionality';
+        counts.set(group, (counts.get(group) || 0) + 1);
+      });
+      return Array.from(counts.entries())
+        .map(([type, count]) => ({
+          type,
+          count,
+          color: aggregateTypeColorMap[type] || '#8897b8'
+        }))
+        .filter((item) => item.count > 0)
+        .sort((a, b) => b.count - a.count);
+    }
+
+    function renderCycleMeta() {
+      const totalBugs = getAllBugs().length;
+      const appsWithBugs = Object.values(bugListsByApp).filter((list) => list.length > 0).length;
+      const badge = document.getElementById('totalBugsBadge');
+      const sub = document.getElementById('bugDistributionSub');
+      const note = document.getElementById('bugDistributionNote');
+      if (badge) badge.textContent = `Total Bugs: ${totalBugs}`;
+      if (sub) sub.textContent = `${totalBugs} loaded bugs across ${appsWithBugs} tested apps.`;
+      if (note) note.textContent = 'Note: distribution is grouped into UX/UI, Functionality, and Data Integrity from loaded bug types.';
+    }
+
+    pieData = buildPieDataFromBugs();
+
+    function renderPie() {
+      const canvas = document.getElementById('bugPie');
+      const ctx = canvas.getContext('2d');
+      const total = pieData.reduce((sum, item) => sum + item.count, 0);
+      if (!total) return;
+      let start = -Math.PI / 2;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      pieData.forEach((item) => {
+        const angle = (item.count / total) * Math.PI * 2;
+        ctx.beginPath();
+        ctx.moveTo(105, 105);
+        ctx.arc(105, 105, 90, start, start + angle);
+        ctx.closePath();
+        ctx.fillStyle = item.color;
+        ctx.fill();
+        start += angle;
+      });
+
+      ctx.beginPath();
+      ctx.arc(105, 105, 46, 0, Math.PI * 2);
+      ctx.fillStyle = '#071227';
+      ctx.fill();
+      ctx.strokeStyle = '#264476';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      ctx.fillStyle = '#f2f7ff';
+      ctx.font = '700 22px "Avenir Next", "Segoe UI", Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText(String(total), 105, 102);
+      ctx.font = '600 11px "Avenir Next", "Segoe UI", Arial';
+      ctx.fillStyle = '#98b3dc';
+      ctx.fillText('Total Bugs', 105, 120);
+
+      const legend = document.getElementById('pieLegend');
+      legend.innerHTML = '';
+      pieData.forEach((item) => {
+        const pct = ((item.count / total) * 100).toFixed(1);
+        const el = document.createElement('div');
+        el.className = 'legend-item';
+        el.innerHTML = `
+          <span class="legend-left">
+            <span class="dot" style="background:${item.color}"></span>
+            <span>${item.type}</span>
+          </span>
+          <strong>${item.count} (${pct}%)</strong>
+        `;
+        legend.appendChild(el);
+      });
+    }
+
+    function severityClass(sev) {
+      if (sev === 'critical') return 'sev sev-high';
+      if (sev === 'high') return 'sev sev-high';
+      if (sev === 'medium') return 'sev sev-medium';
+      if (sev === 'low') return 'sev sev-low';
+      return 'sev';
+    }
+
+    function renderAppBugTable(tableSelector, appRows) {
+      const tbody = document.querySelector(tableSelector);
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      if (!appRows.length) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td colspan="7" style="color:#9db2d7;">Awaiting bug list for this app.</td>
+        `;
+        tbody.appendChild(tr);
+        return;
+      }
+
+      appRows.forEach((bug) => {
+        const tr = document.createElement('tr');
+        const evidenceHtml = (bug.evidence || [])
+          .map((ev) => `<a class="ev" href="${ev.href}" target="_blank" rel="noreferrer">${ev.label}</a>`)
+          .join('');
+
+        tr.innerHTML = `
+          <td>${bug.id || '-'}</td>
+          <td>${bug.title || '-'}</td>
+          <td><span class="${severityClass(bug.severity || 'medium')}">${bug.severity || 'medium'}</span></td>
+          <td>${bug.type || '-'}</td>
+          <td>${bug.platform || '-'}</td>
+          <td><span class="status-chip">${bug.status || 'Open'}</span></td>
+          <td>${evidenceHtml || '-'}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderAccessibility() {
+      const ring = document.getElementById('a11yRing');
+      const scoreText = document.getElementById('a11yScoreText');
+      const status = document.getElementById('a11yStatus');
+      const method = document.getElementById('a11yMethod');
+      const total = document.getElementById('a11yTotal');
+      const high = document.getElementById('a11yHigh');
+      const medLow = document.getElementById('a11yMedLow');
+
+      ring.style.setProperty('--pct', String(accessibilityScore.score));
+      scoreText.textContent = `${accessibilityScore.score}/100`;
+      status.textContent = `Accessibility Status: ${accessibilityScore.status}`;
+      method.textContent = accessibilityScore.method;
+      total.textContent = String(accessibilityScore.total);
+      high.textContent = String(accessibilityScore.high);
+      medLow.textContent = String(accessibilityScore.medium + accessibilityScore.low);
+
+      const tbody = document.querySelector('#accessibilityTable tbody');
+      tbody.innerHTML = '';
+
+      accessibilityIssues.forEach((issue) => {
+        const tr = document.createElement('tr');
+        const evidenceHtml = issue.evidence
+          .map((ev) => `<a class=\"ev\" href=\"${ev.href}\" target=\"_blank\" rel=\"noreferrer\">${ev.label}</a>`)
+          .join('');
+        tr.innerHTML = `
+          <td>${issue.id}</td>
+          <td>${issue.title}</td>
+          <td><span class="${severityClass(issue.severity)}">${issue.severity}</span></td>
+          <td>${issue.wcag}</td>
+          <td>${issue.source}</td>
+          <td>${evidenceHtml}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function generateMarkdown() {
+      const totalBugs = getAllBugs().length;
+      const appsWithBugs = Object.entries(bugListsByApp)
+        .filter(([, list]) => list.length)
+        .map(([key]) => {
+          if (key === 'eview') return 'eView';
+          if (key === 'clawdet') return 'Clawdet';
+          if (key === 'clawqa') return 'Clawqa';
+          if (key === 'moneyclaw') return 'Moneyclaw';
+          return key;
+        });
+
+      const header = [
+        '# Puli-AI Bug Export',
+        '',
+        '## Cycle',
+        '- Status: Done',
+        '- Quality Score: 20%',
+        `- Accessibility Score (Practical): ${accessibilityScore.score}/100 (${accessibilityScore.status})`,
+        '- Platforms: Iphone Air, Iphone 14 Pro Max, Safari Iphone, Safari Mac, Chrome Mac, Android Chrome, Firefox Android, Firefox Mac',
+        '- Apps Tested: eView, Clawdet, Clawqa, Moneyclaw',
+        `- Total Bugs: ${totalBugs}`,
+        `- Current loaded bug records: ${appsWithBugs.join(', ') || 'None'}`,
+        '',
+        '## Accessibility Issues',
+        '| ID | Issue | Severity | WCAG | Source | Evidence |',
+        '|---|---|---|---|---|---|',
+        ...accessibilityIssues.map((issue) => {
+          const ev = issue.evidence.map((e) => `[${e.label}](${e.href})`).join('<br>');
+          return `| ${issue.id} | ${issue.title.replace(/\|/g, '/')} | ${issue.severity} | ${issue.wcag} | ${issue.source} | ${ev} |`;
+        }),
+        '',
+        '## Bugs By Tested App'
+      ];
+      const appSections = [
+        ['eview', 'eView'],
+        ['clawdet', 'Clawdet'],
+        ['clawqa', 'Clawqa'],
+        ['moneyclaw', 'Moneyclaw']
+      ].flatMap(([key, label]) => {
+        const list = bugListsByApp[key] || [];
+        if (!list.length) return [``, `### ${label}`, '- awaiting bug list'];
+        return [
+          '',
+          `### ${label}`,
+          '| ID | Title | Severity | Type | Platform | Status | Evidence |',
+          '|---|---|---|---|---|---|---|',
+          ...list.map((bug) => {
+            const ev = (bug.evidence || []).map((e) => `[${e.label}](${e.href})`).join('<br>');
+            return `| ${bug.id || '-'} | ${(bug.title || '-').replace(/\|/g, '/')} | ${bug.severity || 'medium'} | ${bug.type || '-'} | ${bug.platform || '-'} | ${bug.status || 'Open'} | ${ev || '-'} |`;
+          })
+        ];
+      });
+
+      return [...header, ...appSections, ''].join('\n');
+    }
+
+    function downloadMarkdown() {
+      const content = generateMarkdown();
+      const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'puli-ai-agent-export.md';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    async function copyMarkdown() {
+      const content = generateMarkdown();
+      try {
+        await navigator.clipboard.writeText(content);
+        alert('Markdown copied to clipboard.');
+      } catch {
+        alert('Clipboard copy failed. Use the text area below to copy manually.');
+      }
+    }
+
+    renderCycleMeta();
+    renderPie();
+    renderAppBugTable('#eviewTable tbody', bugListsByApp.eview);
+    renderAppBugTable('#clawdetTable tbody', bugListsByApp.clawdet);
+    renderAppBugTable('#clawqaTable tbody', bugListsByApp.clawqa);
+    renderAppBugTable('#moneyclawTable tbody', bugListsByApp.moneyclaw);
+    renderAccessibility();
+    document.getElementById('mdOutput').value = generateMarkdown();
+  </script>
+</body>
+</html>
